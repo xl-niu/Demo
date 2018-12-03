@@ -1,0 +1,20 @@
+#progress { position: fixed;left:0px;bottom: 0px; height: .3rem; background: #abcd03; transition: opacity 5000ms linear }
+#progress.done { opacity: 0 }
+#progress span {
+    position: absolute;
+    height: .3rem;
+    shadow: #a98f7b 1px 0 6px 1px;
+    -webkit-box-shadow: #a98f7b 1px 0 6px 1px;
+    radius: 100%;
+    -webkit-border-radius: 100%;
+    opacity: 1;
+    width: 10px;
+    right: 0px;
+    animation: pulse 2s linear 0s infinite;
+    -webkit-animation: pulse 2s linear 0s infinite;/*时长/匀速/延迟/*/
+}
+@-webkit-keyframes pulse {
+    30% {opacity:.6}/*透明度*/
+    60% {opacity:0;}
+    100% {opacity:.6}
+}

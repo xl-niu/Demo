@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                          http://www.springframework.org/schema/beans/spring-beans.xsd
+                          http://www.springframework.org/schema/tx
+                          http://www.springframework.org/schema/tx/spring-tx.xsd
+                          http://www.springframework.org/schema/context
+                          http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/aop
+                          http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!-- 设置AOP代理开启 -->
+    <!-- AOP的代理开启放在必须在所有加载的 最前面 (意思是说这个文件必须是第一个呗Spring容器加载的)-->
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+
+    <!--1、配置数据库相关参数-->
+    <context:property-placeholder location="classpath:jdbc.properties" ignore-unresolvable="true"/>
+
+    <!--2、 数据源druid -->
+    <!-- sqlserver数据源 -->
+    <bean id="dataSource1" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driverClassName2}"/>
+        <property name="url" value="${jdbc.url2}"/>
+        <property name="username" value="${jdbc.username2}"/>
+        <property name="password" value="${jdbc.password2}"/> <!-- 设置初始大小、最小、最大 连接数-->
+        <property name="initialSize" value="${druid.pool.size.init}"/>
+        <property name="minIdle" value="${druid.pool.size.min}"/>
+        <property name="maxActive" value="${druid.pool.size.max}"/> <!-- 配置监控统计拦截的filters，wall用于防止sql注入，stat用于统计分析 -->
+        <property name="filters" value="wall,stat"/>
+    </bean>
+
+    <!-- Oracle数据源 -->
+    <bean id="dataSource2" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${jdbc.driverClassName3}"/>
+        <property name="url" value="${jdbc.url3}"/>
+        <property name="username" value="${jdbc.username3}"/>
+        <property name="password" value="${jdbc.password3}"/>
+        <!-- 设置初始大小、最小、最大 连接数-->
+        <property name="initialSize" value="${druid.pool.size.init}"/>
+        <property name="minIdle" value="${druid.pool.size.min}"/>
+        <property name="maxActive" value="${druid.pool.size.max}"/>
+        <!-- 配置监控统计拦截的filters，wall用于防止sql注入，stat用于统计分析 -->
+        <property name="filters" value="wall,stat"/>
+    </bean>
+
+    <bean id="dynamicDataSource" class="com.zq.dao.DynamicDataSource">
+        <property name="targetDataSources">
+            <map key-type="java.lang.String">
+                <entry key="ds1" value-ref="dataSource1"/>
+                <entry key="ds2" value-ref="dataSource2"/>
+            </map>
+        </property> <!--默认数据源-->
+        <property name="defaultTargetDataSource" ref="dataSource1"/>
+    </bean>
+    <!--自动切换数据源-->
+    <bean id="dataSourceExchange" class="com.zq.dao.DataSourceExchange"/>
+    <aop:config>
+        <aop:aspect ref="dataSourceExchange">
+            <aop:pointcut id="dataSourcePointcut" expression="execution(* com.zq.service.*.impl.*ServiceImpl.*(..))"/>
+            <aop:before pointcut-ref="dataSourcePointcut" method="before"/>
+            <aop:after pointcut-ref="dataSourcePointcut" method="after"/>
+        </aop:aspect>
+    </aop:config>
+
+    <!-- 配置数据源,加载配置,也就是dataSource -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--注入数据库连接池-->
+        <property name="dataSource" ref="dynamicDataSource"></property>
+        <!--mybatis的配置文件-->
+        <property name="configLocation" value="classpath:mybatis/mybatis-config.xml"/>
+        <!--扫描 mapper.xml映射文件,配置扫描的路径-->
+        <property name="mapperLocations" value="classpath:mybatis/mapping/*.xml"></property>
+    </bean>
+
+    <bean id="sqlsessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+        <constructor-arg index="0" ref="sqlSessionFactory"></constructor-arg>
+    </bean>
+
+    <!--事务管理-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!--注入dataSource-->
+        <property name="dataSource" ref="dynamicDataSource"/>
+    </bean>
+
+    <!--开启事务注解扫描-->
+    <tx:annotation-driven transaction-manager="transactionManager"></tx:annotation-driven>
+
+</beans>
