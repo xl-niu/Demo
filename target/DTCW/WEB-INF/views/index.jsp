@@ -1,5 +1,5 @@
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
 <head>
     <title>Index</title>
@@ -50,8 +50,8 @@
     <div class="row">
         <div class="col-sm-12">
             <div class="foot_button">
-                <div class="button1" >1车间</div>
-                <div class="button2" >2车间</div>
+                <div class="button1">1车间</div>
+                <div class="button2">2车间</div>
             </div>
         </div>
     </div>
